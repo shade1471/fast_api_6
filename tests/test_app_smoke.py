@@ -3,9 +3,12 @@ from random import randint
 
 import requests
 
+from utils.fast_api_app import FastApiApp
 
-def test_app_run(app_url: str):
-    response = requests.get(f'{app_url}/status')
+
+def test_app_run(env: str):
+    app = FastApiApp(env)
+    response = app.get_status()
     assert response.status_code == HTTPStatus.OK
 
     body = response.json()
@@ -13,12 +16,14 @@ def test_app_run(app_url: str):
     assert body['status'] == 'App run successful'
 
 
-def test_smoke_users(users_endpoint: str):
-    response = requests.get(f'{users_endpoint}')
+def test_smoke_users(env: str):
+    app = FastApiApp(env)
+    response = app.get_status()
     assert response.status_code == HTTPStatus.OK
 
 
-def test_smoke_user(users_endpoint: str):
+def test_smoke_user(env: str):
+    app = FastApiApp(env)
     user_id = randint(1, 12)
-    response = requests.get(f"{users_endpoint}/{user_id}")
+    response = app.get_user_by_id(user_id)
     assert response.status_code == HTTPStatus.OK

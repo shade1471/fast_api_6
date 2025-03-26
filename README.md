@@ -8,25 +8,28 @@
 
 ```bash
 # Клонируйте репозиторий:
-git clone https://github.com/shade1471/fast_api_2
+git clone https://github.com/shade1471/fast_api_6
 cd /fast_api_2
 
 # Установите зависимости:
 pip install -r requirements.txt
 
 # Установите переменную APP_URL
-Создайте файл .env в корне воспользовавшись шаблоном .env.samle и укажите требуемый url для сервиса FastApi
+Создайте файл .env в корне воспользовавшись шаблоном .env.sample и укажите переменные окружения
 
-# Запустить докер контейнер с БД Postgresql
+# Запустить сервис и БД используя docker
 docker-compose up -d
-
-# Запустите сервис FastApi:
-uvicorn app.main:app --reload
 * При запуске сервиса 12 пользователей будет добавлено в БД
+* Сервис fastapi запускается на 8000 порту
 ```
+
 ## Запуск авто-тестов
+
 ```bash
 # В новом окне терминала выполните команду:
+Используя аргумент --env=[rc,dev,beta] можно управлять base_url. Смотри 
+По умолчанию, без явной передачи параметра, rc=127.0.0.1:8000
+
 ## Авто-тесты endpoint-ов api/users
 pytest ./tests/test_fast_api.py
 ## Smoke авто-тесты
@@ -36,6 +39,7 @@ pytest ./tests/test_pagination.py
 ```
 
 ## Остановка сервиса
+
 ```bash
 # Остановите докер контейнер с БД Postgresql
 docker-compose down
@@ -74,6 +78,13 @@ PUT /api/users/{user_id}
 DELETE /api/users/{user_id}
 Удаляет пользователя по ID.
 ```
+
+```
+# Удалить пользователя
+GET /status
+Показывает текущий статус, запущенного сервиса
+```
+
 ## Предустановленные данные
 
 При запуске сервиса, существует 12 пользователей, id c 1 по 12.

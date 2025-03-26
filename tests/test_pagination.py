@@ -2,9 +2,9 @@ import math
 from http import HTTPStatus
 
 import pytest
-import requests
 
 from app.database.users import count_users
+from utils.fast_api_app import FastApiApp
 
 
 @pytest.fixture(scope='module', autouse=True)
@@ -13,9 +13,10 @@ def current_count_users() -> int:
 
 
 @pytest.mark.parametrize('size', (1, 3, 5))
-def test_count_users_on_page_by_size_change(users_endpoint: str, size: int):
+def test_count_users_on_page_by_size_change(size: int, env: str):
     """Проверить количество пользователей на странице, при разном параметре size"""
-    response = requests.get(f'{users_endpoint}', params={'page': 1, 'size': size})
+    app = FastApiApp(env)
+    response = app.get_all_users(params={'page': 1, 'size': size})
     assert response.status_code == HTTPStatus.OK
     body = response.json()
     items = body['items']
@@ -26,9 +27,10 @@ def test_count_users_on_page_by_size_change(users_endpoint: str, size: int):
 
 
 @pytest.mark.parametrize('size', (1, 6, 12, 100))
-def test_count_page_by_size_change(users_endpoint: str, current_count_users: int, size: int):
+def test_count_page_by_size_change(current_count_users: int, size: int, env: str):
     """Проверить количество страниц, при разном параметре size"""
-    response = requests.get(f'{users_endpoint}', params={'size': size})
+    app = FastApiApp(env)
+    response = app.get_all_users(params={'size': size})
     assert response.status_code == HTTPStatus.OK
     body = response.json()
     actual_pages = body['pages']
@@ -41,12 +43,13 @@ def test_count_page_by_size_change(users_endpoint: str, current_count_users: int
 
 
 @pytest.mark.parametrize('page', (1, 2, 3))
-def test_count_users_on_page_by_size_const(users_endpoint: str, current_count_users: int, page: int):
+def test_count_users_on_page_by_size_const(current_count_users: int, page: int, env: str):
     """Проверить количество пользователей на каждой полной странице при фиксированном size"""
     size = 2
     expected_pages = math.ceil(current_count_users / size)
 
-    response = requests.get(f'{users_endpoint}', params={'page': page, 'size': size})
+    app = FastApiApp(env)
+    response = app.get_all_users(params={'page': page, 'size': size})
     assert response.status_code == HTTPStatus.OK
     body = response.json()
     assert body['page'] == page
@@ -55,13 +58,15 @@ def test_count_users_on_page_by_size_const(users_endpoint: str, current_count_us
     assert body['pages'] == expected_pages
 
 
-def test_results_items_by_page_change(users_endpoint: str):
+def test_results_items_by_page_change(env: str):
     """Проверить, что возвращаются разные данные при разных значениях page"""
     size = 4
-    response_one = requests.get(users_endpoint, params={'page': 1, 'size': size})
+
+    app = FastApiApp(env)
+    response_one = app.get_all_users(params={'page': 1, 'size': size})
     assert response_one.status_code == HTTPStatus.OK
     body_one = response_one.json()
-    response_two = requests.get(users_endpoint, params={'page': 2, 'size': size})
+    response_two = app.get_all_users(params={'page': 2, 'size': size})
     assert response_two.status_code == HTTPStatus.OK
     body_two = response_two.json()
 
