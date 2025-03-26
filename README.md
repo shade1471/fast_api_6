@@ -1,4 +1,4 @@
-# FastApi + Python, QA-Guru intro
+# FastApi + Python, QA-Guru, Lesson 6 Продвинутые техники автоматизации REST
 
 Микросервис на Python + FastAPI
 
