@@ -1,0 +1,12 @@
+pytest~=8.3.5
+fastapi~=0.115.11
+fastapi[standard]
+email-validator
+python-dotenv~=1.0.1
+requests~=2.32.3
+pydantic~=2.10.6
+fastapi-pagination~=0.12.34
+uvicorn~=0.34.0
+sqlalchemy
+sqlmodel
+psycopg2-binary
