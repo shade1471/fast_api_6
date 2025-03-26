@@ -41,7 +41,7 @@ pytest ./tests/test_pagination.py
 ## Остановка сервиса
 
 ```bash
-# Остановите докер контейнер с БД Postgresql
+# Остановите докер контейнер с сервисом и БД
 docker-compose down
 Либо, если необходимо удалить volume после запуска автотестов
 docker-compose down -v 
