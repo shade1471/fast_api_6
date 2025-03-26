@@ -1,8 +1,6 @@
 from http import HTTPStatus
 from random import randint
 
-import requests
-
 from utils.fast_api_app import FastApiApp
 
 
