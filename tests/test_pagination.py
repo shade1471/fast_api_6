@@ -12,10 +12,14 @@ def current_count_users() -> int:
     return count_users()
 
 
+@pytest.fixture(scope='function')
+def app(env: str):
+    return FastApiApp(env)
+
+
 @pytest.mark.parametrize('size', (1, 3, 5))
-def test_count_users_on_page_by_size_change(size: int, env: str):
+def test_count_users_on_page_by_size_change(app: FastApiApp, size: int):
     """Проверить количество пользователей на странице, при разном параметре size"""
-    app = FastApiApp(env)
     response = app.get_all_users(params={'page': 1, 'size': size})
     assert response.status_code == HTTPStatus.OK
     body = response.json()
@@ -27,9 +31,8 @@ def test_count_users_on_page_by_size_change(size: int, env: str):
 
 
 @pytest.mark.parametrize('size', (1, 6, 12, 100))
-def test_count_page_by_size_change(current_count_users: int, size: int, env: str):
+def test_count_page_by_size_change(app: FastApiApp, current_count_users: int, size: int):
     """Проверить количество страниц, при разном параметре size"""
-    app = FastApiApp(env)
     response = app.get_all_users(params={'size': size})
     assert response.status_code == HTTPStatus.OK
     body = response.json()
@@ -43,12 +46,11 @@ def test_count_page_by_size_change(current_count_users: int, size: int, env: str
 
 
 @pytest.mark.parametrize('page', (1, 2, 3))
-def test_count_users_on_page_by_size_const(current_count_users: int, page: int, env: str):
+def test_count_users_on_page_by_size_const(app: FastApiApp, current_count_users: int, page: int):
     """Проверить количество пользователей на каждой полной странице при фиксированном size"""
     size = 2
     expected_pages = math.ceil(current_count_users / size)
 
-    app = FastApiApp(env)
     response = app.get_all_users(params={'page': page, 'size': size})
     assert response.status_code == HTTPStatus.OK
     body = response.json()
@@ -58,11 +60,10 @@ def test_count_users_on_page_by_size_const(current_count_users: int, page: int, 
     assert body['pages'] == expected_pages
 
 
-def test_results_items_by_page_change(env: str):
+def test_results_items_by_page_change(app: FastApiApp):
     """Проверить, что возвращаются разные данные при разных значениях page"""
     size = 4
 
-    app = FastApiApp(env)
     response_one = app.get_all_users(params={'page': 1, 'size': size})
     assert response_one.status_code == HTTPStatus.OK
     body_one = response_one.json()

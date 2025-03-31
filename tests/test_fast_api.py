@@ -11,11 +11,16 @@ from utils.fast_api_app import FastApiApp
 
 
 @pytest.fixture(scope='function')
-def create_user_id(env: str) -> int:
+def app(env: str):
+    return FastApiApp(env)
+
+
+@pytest.fixture(scope='function')
+def create_user_id(app: FastApiApp) -> int:
     """Фикстура для создания временного пользователя"""
 
     new_user = {"name": "tmp user", "job": "PM"}
-    app = FastApiApp(env)
+
     response = app.create_user(new_user)
     assert response.status_code == HTTPStatus.CREATED, 'Не удалось создать пользователя'
     current_id = response.json()['id']
@@ -25,8 +30,7 @@ def create_user_id(env: str) -> int:
 class TestGetUser:
 
     @pytest.mark.parametrize('user_id', [1, 2, 3, 4, 5])
-    def test_user_data(self, user_id: int, env: str):
-        app = FastApiApp(env)
+    def test_user_data(self, app: FastApiApp, user_id: int):
         response = app.get_user_by_id(user_id)
         assert response.status_code == HTTPStatus.OK
         body = response.json()
@@ -38,8 +42,7 @@ class TestGetUser:
         assert data["first_name"] == users_data[user_id].first_name
         assert data["last_name"] == users_data[user_id].last_name
 
-    def test_response_when_user_not_exist(self, env: str):
-        app = FastApiApp(env)
+    def test_response_when_user_not_exist(self, app: FastApiApp):
         user_id = get_max_user_id() + 1
         response = app.get_user_by_id(user_id)
         assert response.status_code == HTTPStatus.NOT_FOUND
@@ -47,8 +50,7 @@ class TestGetUser:
         assert not body
 
     @pytest.mark.parametrize('user_id', (0, -1))
-    def test_not_valid_value_ids(self, user_id: int, env: str):
-        app = FastApiApp(env)
+    def test_not_valid_value_ids(self, app: FastApiApp, user_id: int):
         response = app.get_user_by_id(user_id)
         assert response.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
         body = response.json()
@@ -67,9 +69,8 @@ class TestCRUD:
         {"name": "Max", "job": "qa-manual"},
         {'name': 'Alisa', 'job': 'qa-auto'}
     ])
-    def test_create_user_post_request(self, user_dict: dict, env: str):
+    def test_create_user_post_request(self, app: FastApiApp, user_dict: dict):
         """Создание пользователя"""
-        app = FastApiApp(env)
         response = app.create_user(user_dict)
         assert response.status_code == HTTPStatus.CREATED
         body = response.json()
@@ -82,17 +83,15 @@ class TestCRUD:
         assert new_user.first_name == user_dict['name']
         assert new_user.job == user_dict['job']
 
-    def test_create_not_valid_user(self, env: str):
+    def test_create_not_valid_user(self, app: FastApiApp):
         """Создание пользователя с невалидными данными"""
-        app = FastApiApp(env)
         response = app.create_user({'name': 'Alisa', 'job': 1})
         assert response.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
 
-    def test_update_exist_user(self, create_user_id: int, env: str):
+    def test_update_exist_user(self, app: FastApiApp, create_user_id: int):
         """Обновление существующего пользователя"""
         new_data_user = {"name": "Nikolay", "job": "Super PM"}
 
-        app = FastApiApp(env)
         response_update = app.update_user(create_user_id, new_data_user)
         assert response_update.status_code == HTTPStatus.OK
         body = response_update.json()
@@ -110,45 +109,38 @@ class TestCRUD:
         assert data['first_name'] == new_data_user["name"]
         assert data['job'] == new_data_user["job"]
 
-    def test_update_not_exist_user(self, env: str):
+    def test_update_not_exist_user(self, app: FastApiApp):
         """Обновление не существующего пользователя"""
         new_data_user = {"name": "Maxim", "job": "driver"}
         user_id = get_max_user_id() + 1
 
-        app = FastApiApp(env)
         response_update = app.update_user(user_id, new_data_user)
 
         assert response_update.status_code == HTTPStatus.NOT_FOUND
         assert response_update.json()['detail'] == 'User not found'
 
-    def test_update_not_valid_data(self, create_user_id: int, env: str):
+    def test_update_not_valid_data(self, app: FastApiApp, create_user_id: int):
         """Обновление существующего пользователя не валидными данными"""
         new_data_user = {"name": "Maxim not valid", "job": 1}
 
-        app = FastApiApp(env)
         response_update = app.update_user(create_user_id, new_data_user)
         assert response_update.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
 
-    def test_delete_user(self, create_user_id: int, env: str):
+    def test_delete_user(self, app: FastApiApp, create_user_id: int):
         """Удаление существующего пользователя"""
-        app = FastApiApp(env)
         delete_response = app.delete_user(create_user_id)
 
         assert delete_response.status_code == HTTPStatus.NO_CONTENT
         assert app.get_user_by_id(create_user_id).status_code == HTTPStatus.NOT_FOUND
 
-        # assert requests.get(f'{users_endpoint}/{create_user_id}').status_code == HTTPStatus.NOT_FOUND
-
-    def test_delete_not_exist_user(self, env: str):
+    def test_delete_not_exist_user(self, app: FastApiApp):
         """Удаление не существующего пользователя"""
         user_id = get_max_user_id() + 1
-        app = FastApiApp(env)
         delete_response = app.delete_user(user_id)
         assert delete_response.status_code == HTTPStatus.NOT_FOUND
 
     @pytest.mark.parametrize('user_id', (0, -1))
-    def test_delete_with_not_valid_user_id(self, user_id: int, env: str):
+    def test_delete_with_not_valid_user_id(self, app: FastApiApp, user_id: int):
         """Удаление пользователя с невалидным id"""
-        app = FastApiApp(env)
         delete_response = app.delete_user(user_id)
         assert delete_response.status_code == HTTPStatus.UNPROCESSABLE_CONTENT
